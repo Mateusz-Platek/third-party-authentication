@@ -1,7 +1,7 @@
 let clickCount = 0;
 
 const countryInput = document.getElementById('country');
-const myForm = document.getElementById('form');
+const form = document.getElementById('form');
 const modal = document.getElementById('form-feedback-modal');
 const clicksInfo = document.getElementById('click-count');
 
@@ -18,7 +18,9 @@ async function fetchAndFillCountries() {
         }
         const data = await response.json();
         const countries = data.map(country => country.name.common);
+        countries.sort();
         countryInput.innerHTML = countries.map(country => `<option value="${country}">${country}</option>`).join('');
+        getCountryByIP();
     } catch (error) {
         console.error('Wystąpił błąd:', error);
     }
@@ -29,7 +31,14 @@ function getCountryByIP() {
         .then(response => response.json())
         .then(data => {
             const country = data.country;
-            // TODO inject country to form and call getCountryCode(country) function
+            const select = document.getElementById("country");
+            for (const option of select.options) {
+                if (option.value === country) {
+                    option.selected = true;
+                    break;
+                }
+            }
+            getCountryCode(country)
         })
         .catch(error => {
             console.error('Błąd pobierania danych z serwera GeoJS:', error);
@@ -47,18 +56,27 @@ function getCountryCode(countryName) {
         return response.json();
     })
     .then(data => {        
-        const countryCode = data[0].idd.root + data[0].idd.suffixes.join("")
-        // TODO inject countryCode to form
+        const countryCode = data[0].idd.root + data[0].idd.suffixes.join("");
+        const select = document.getElementById("countryCode");
+        for (const option of select.options) {
+            if (option.value === countryCode) {
+                option.selected = true;
+                break;
+            }
+        }
     })
     .catch(error => {
         console.error('Wystąpił błąd:', error);
     });
 }
 
-
 (() => {
-    // nasłuchiwania na zdarzenie kliknięcia myszką
     document.addEventListener('click', handleClick);
-
     fetchAndFillCountries();
+    document.addEventListener('keypress', (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            form.submit();
+        }
+    });
 })()
